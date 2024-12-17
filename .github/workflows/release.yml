@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Project
+        run: pnpm build
+
+      # Set an environment variable to check for NPM_TOKEN's existence
+      - name: Check for NPM_TOKEN
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "HAS_NPM_TOKEN=false" >> $GITHUB_ENV
+          else
+            echo "HAS_NPM_TOKEN=true" >> $GITHUB_ENV
+          fi
+
+      # Handle regular versioning if no NPM_TOKEN is set
+      - name: (No NPM) Create Release Pull Request
+        if: ${{ env.HAS_NPM_TOKEN == 'false' }}
+        uses: changesets/action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Run Patch Versioning and Commit Changes
+      - name: Run Patch Versioning and Commit Changes
+        if: ${{ env.HAS_NPM_TOKEN == 'true' }}
+        run: |
+          pnpm changeset version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: patch version bump via CI" || echo "No changes to commit"
+          git push origin ${{ github.ref }}
+
+      # If NPM_TOKEN is available, create .npmrc and prepare for npm release
+      - name: Create .npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > "$HOME/.npmrc"
+        if: ${{ env.HAS_NPM_TOKEN == 'true' }}
+
+      # For staging branch, create release PR and publish to npm with specific version
+      - name: (Staging) Create Release Pull Request and Publish to npm
+        id: changesets-staging
+        uses: changesets/action@v1
+        with:
+          version: pnpm version:staging
+          publish: pnpm release:staging
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: ${{ env.HAS_NPM_TOKEN == 'true' && github.ref_name == 'staging-branch' }}
+
+      # For production, create release PR and publish to npm as usual
+      - name: (Production) Create Release Pull Request and Publish to npm
+        id: changesets-production
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: ${{ env.HAS_NPM_TOKEN == 'true' && (github.ref_name == 'master' || github.ref_name == 'main') }}
