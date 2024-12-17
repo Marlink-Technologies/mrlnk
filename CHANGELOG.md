@@ -1,5 +1,11 @@
 # @marlink-technologies/mrlnk
 
+## 1.0.4
+
+### Patch Changes
+
+- 2da5ad2: Fixed changeset branch from master to main
+
 ## 1.0.3
 
 ### Patch Changes
