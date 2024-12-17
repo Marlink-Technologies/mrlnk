@@ -27,19 +27,19 @@ This repository supports the MRLNK framework by handling code formatting, lintin
 
 ## Included tools
 
-This template contains some preconfigured development tools:
+Preconfigured development tools:
 
 - [Typescript](https://www.typescriptlang.org/): A superset of JavaScript that adds an additional layer of Typings, bringing more security and efficiency to the written code.
 - [Prettier](https://prettier.io/): Code formatting that assures consistency across all projects.
 - [ESLint](https://eslint.org/): Code linting that enforces industry best practices.
 - [Playwright](https://playwright.dev/): Fast and reliable end-to-end testing.
 - [esbuild](https://esbuild.github.io/): JavaScript bundler that compiles, bundles, and minifies the original TypeScript files.
-- [Changesets](https://github.com/changesets/changesets): A way to manage your versioning and changelogs.
-- [Finsweet's TypeScript Utils](https://github.com/finsweet/ts-utils): Some utilities to help you in your Webflow development.
+- [Changesets](https://github.com/changesets/changesets): A way to manage versioning and changelogs.
+- [Finsweet's TypeScript Utils](https://github.com/finsweet/ts-utils): Some utilities to help in Webflow development.
 
 ## Requirements
 
-This template requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
+The use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
 ```bash
 npm i -g pnpm
@@ -232,30 +232,64 @@ You'll have to manually merge this new PR to complete the workflow.
 If an `NPM_TOKEN` secret is included in the repository secrets, Changesets will automatically deploy the new package version to npm.
 See [how to automatically deploy updates to npm](#how-to-automatically-deploy-updates-to-npm) for more info.
 
-#### How to enable Continuous Deployment with Changesets
+### Setting up CI Secrets
 
-Some repositories may not have the required permissions to let Changesets interact with the repository.
+To enable Continuous Integration and Deployment, you need to add two repository secrets: `NPM_TOKEN` and `GH_TOKEN`.
 
-To enable full compatibility with Changesets, go to the repository settings (`Settings > Actions > General > Workflow Permissions`) and define:
+#### Creating a Personal Access Token (GH_TOKEN)
 
-- ✅ Read and write permissions.
-- ✅ Allow GitHub Actions to create and approve pull requests.
+1. Go to GitHub Settings:
 
-Enabling this setting for your organization account (`Account Settings > Actions > General`) could help streamline the process. By doing so, any new repos created under the org will automatically inherit the setting, which can save your teammates time and effort. This can only be applied to organization accounts at the time.
+   - Visit [GitHub](https://github.com/).
+   - In the top-right corner, click your profile picture and select **Settings**.
 
-#### How to automatically deploy updates to npm
+2. Navigate to Developer Settings:
 
-As mentioned before, Changesets will automatically deploy the new package version to npm if an `NPM_TOKEN` secret is provided.
+   - Scroll down the left sidebar and click **Developer settings**.
 
-This npm token should be:
+3. Access Personal Access Tokens:
 
-- From Finsweet's npm organization if this repository is meant for internal/product development.
-- From a client's npm organization if this repository is meant for client development. In this case, you should ask the client to [create an npm account](https://www.npmjs.com/signup) and provide you the credentials (or the npm token, if they know how to get it).
+   - In the left sidebar, click **Personal access tokens > Tokens (classic)**.
+   - Click **Generate new token**.
 
-Once you're logged into the npm account, you can get an access token by following [this guide](https://docs.npmjs.com/creating-and-viewing-access-tokens).
+4. Configure the Token:
 
-The access token must be then placed in a [repository secret](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-encrypted-secrets-for-your-repository-and-organization-for-codespaces#adding-secrets-for-a-repository) named `NPM_TOKEN`.
+   - Add a Note to describe what the token is for (e.g., "CI Automation").
+   - Set the Expiration time (e.g., 30 days, 90 days, or "No expiration" for permanent).
+   - Select Scopes based on your needs:
+     - `repo` – Full control of private repositories.
+     - `workflow` – Access workflows and GitHub Actions.
+     - `write:packages` – Publish and manage packages.
+   - Other scopes can be added depending on permissions needed.
+
+5. Generate the Token:
+
+   - Scroll to the bottom and click **Generate token**.
+   - Copy the token immediately after generation. You won’t be able to see it again.
+
+6. Add the Token as a Secret:
+   - Go to your repository on GitHub.
+   - Navigate to **Settings > Secrets and variables > Actions**.
+   - Click **New repository secret**.
+   - Name the secret `GH_TOKEN` and paste the generated token as the value.
+
+#### Creating an NPM Token (NPM_TOKEN)
+
+1. Go to [npmjs.com](https://www.npmjs.com/) and log in to your account.
+2. Navigate to **Access Tokens**.
+3. Generate a new token:
+   - Choose **Classic Token**.
+   - Set the type to **Automation**.
+4. Copy the generated token.
+
+5. Add the Token as a Secret:
+   - Go to your repository on GitHub.
+   - Navigate to **Settings > Secrets and variables > Actions**.
+   - Click **New repository secret**.
+   - Name the secret `NPM_TOKEN` and paste the generated token as the value.
+
+Your tokens are now ready for use in CI/CD workflows or API integrations!
 
 ## Repository
 
-This repository is maintained by the MRLNK team. For any issues or contributions, please refer to the [Contributing guide](#contributing-guide).
+This repository is maintained by the Marlink Technologies team. For any issues or contributions, please refer to the [Contributing guide](#contributing-guide).
